@@ -12,8 +12,11 @@ func Info(c telebot.Context) error {
 
 	text := fmt.Sprintf(`
 Khotmil %s
-Periode %d
-	`, group.Name, group.Round)
+Periode %d %s - %s
+	`, group.Name,
+		group.Round,
+		group.StartedAt.Time.Format("02 Jan 2006"),
+		group.Deadline.Time.Format("02 Jan 2006"))
 
 	for i, m := range group.Members {
 		text += fmt.Sprintf(`

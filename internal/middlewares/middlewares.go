@@ -47,3 +47,20 @@ func AdminOnly(next telebot.HandlerFunc) telebot.HandlerFunc {
 		return next(c)
 	}
 }
+
+func IsMember(next telebot.HandlerFunc) telebot.HandlerFunc {
+	return func(c telebot.Context) error {
+		g := c.Get("group").(*models.Group)
+		i := slices.IndexFunc(g.Members, func(gm models.Member) bool {
+			return c.Sender().ID == gm.TelegramUserId
+		})
+
+		if i == -1 {
+			return c.Reply("Member only")
+		}
+
+		c.Set("member", &g.Members[i])
+
+		return next(c)
+	}
+}

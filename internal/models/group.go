@@ -65,16 +65,50 @@ func (g *Group) SetSchedule(t time.Time) error {
 
 func (g *Group) AssignMembersSchedules() error {
 	var schedules []Schedule
-	query := DB.Where("group_id = ?", g.ID).Where("started_at IS NULL").Order("jus ASC").Limit(len(g.Members)).Find(&schedules)
+	members := []Member{}
+
+	err := DB.Where("group_id = ?", g.ID).Order("ordering ASC").Find(&members).Error
+	if err != nil {
+		return err
+	}
+
+	query := DB.Where("group_id = ?", g.ID).Where("started_at IS NULL").Order("jus ASC").Limit(len(members)).Find(&schedules)
 	if query.Error != nil {
 		return query.Error
 	}
 
 	for i, s := range schedules {
-		s.MemberID = sql.NullInt64{Int64: int64(g.Members[i].ID), Valid: true}
+		s.MemberID = sql.NullInt64{Int64: int64(members[i].ID), Valid: true}
 		s.StartedAt = g.StartedAt
 		s.Deadline = g.Deadline
 		DB.Save(&s)
+	}
+
+	return nil
+}
+
+func (g *Group) IncreaseRound() error {
+	g.Round += 1
+	tx := DB.Save(g)
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
+func (g *Group) ResetMemberOrder() error {
+	var tx *gorm.DB
+	for _, m := range g.Members {
+		l := len(g.Members)
+		m.Ordering += 1
+		if m.Ordering > l {
+			m.Ordering -= l
+		}
+		tx = DB.Save(m)
+		if tx.Error != nil {
+			return tx.Error
+		}
 	}
 
 	return nil

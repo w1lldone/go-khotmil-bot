@@ -44,6 +44,8 @@ func registerRoutes(bot *telebot.Bot) {
 	bot.Use(middlewares.HasGroup)
 	bot.Handle("/join", handlers.Join)
 	bot.Handle("/info", handlers.Info)
+	bot.Handle("/progress", handlers.Progress)
+	bot.Handle("/finish", handlers.Finish, middlewares.IsMember)
 
 	bot.Use(middlewares.AdminOnly)
 	bot.Handle("/start", handlers.Start)
