@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/w1lldone/go-khotmil-bot/internal/cache"
 	"github.com/w1lldone/go-khotmil-bot/internal/handlers"
 	"github.com/w1lldone/go-khotmil-bot/internal/middlewares"
 	"github.com/w1lldone/go-khotmil-bot/internal/models"
@@ -24,6 +25,8 @@ func main() {
 		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
 	}
 
+	cache.NewTable()
+
 	bot, err := telebot.NewBot(pref)
 	if err != nil {
 		log.Fatal(err)
@@ -39,6 +42,21 @@ func main() {
 }
 
 func registerRoutes(bot *telebot.Bot) {
+	bot.Handle(telebot.OnText, func(c telebot.Context) error {
+		stored, err := cache.Table.Value(cache.RenameMemberCacheKey(c))
+		if err != nil {
+			return err
+		} else {
+			fmt.Printf("context %+v", stored.Data().(handlers.EditedMember))
+			member := stored.Data().(handlers.EditedMember)
+			member.Member.Name = c.Text()
+			models.DB.Save(member.Member)
+			cache.Table.Delete(cache.RenameMemberCacheKey(c))
+		}
+
+		return c.Reply("OK")
+	})
+
 	bot.Handle("/new", handlers.New)
 
 	bot.Use(middlewares.HasGroup)
@@ -49,4 +67,6 @@ func registerRoutes(bot *telebot.Bot) {
 
 	bot.Use(middlewares.AdminOnly)
 	bot.Handle("/start", handlers.Start)
+	bot.Handle("/rename", handlers.Rename)
+	bot.Handle(&handlers.BtnRn, handlers.RenameSelected)
 }
