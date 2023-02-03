@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/w1lldone/go-khotmil-bot/internal/models"
@@ -32,7 +31,6 @@ func Finish(c telebot.Context) error {
 	if len(remainings) == 0 {
 		var free int64
 		models.DB.Model(&models.Schedule{}).Where("group_id = ?", group.ID).Where("member_id IS NULL").Count(&free)
-		fmt.Printf("Free shcedules %d \n", free)
 		if free == 0 {
 			err = group.IncreaseRound()
 			if err != nil {

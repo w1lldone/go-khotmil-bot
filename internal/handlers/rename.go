@@ -10,10 +10,6 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-type EditedMember struct {
-	Member *models.Member
-}
-
 var (
 	// Universal markup builders.
 	menu  = &telebot.ReplyMarkup{ResizeKeyboard: true}
@@ -48,13 +44,28 @@ func RenameSelected(c telebot.Context) error {
 		return err
 	}
 
-	em := EditedMember{
+	em := cache.EditedMember{
 		Member: member,
 	}
 
-	cache.Table.Add(cache.RenameMemberCacheKey(c), 5*time.Minute, em)
+	cache.Table.Add(cache.GroupCacheKey(c), 5*time.Minute, em)
 
 	rm := &telebot.ReplyMarkup{ForceReply: true, Placeholder: "type new name"}
 
 	return c.Send(fmt.Sprintf("Please type new name for %s", member.Name), rm)
+}
+
+func updateName(c telebot.Context, m cache.EditedMember) error {
+	m.Member.Name = c.Text()
+	err := models.DB.Save(m.Member).Error
+	if err != nil {
+		return err
+	}
+
+	_, err = cache.Table.Delete(cache.GroupCacheKey(c))
+	if err != nil {
+		return err
+	}
+
+	return c.Reply("name updated")
 }

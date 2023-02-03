@@ -42,20 +42,7 @@ func main() {
 }
 
 func registerRoutes(bot *telebot.Bot) {
-	bot.Handle(telebot.OnText, func(c telebot.Context) error {
-		stored, err := cache.Table.Value(cache.RenameMemberCacheKey(c))
-		if err != nil {
-			return err
-		} else {
-			fmt.Printf("context %+v", stored.Data().(handlers.EditedMember))
-			member := stored.Data().(handlers.EditedMember)
-			member.Member.Name = c.Text()
-			models.DB.Save(member.Member)
-			cache.Table.Delete(cache.RenameMemberCacheKey(c))
-		}
-
-		return c.Reply("OK")
-	})
+	bot.Handle(telebot.OnText, handlers.OnText, middlewares.AdminOnly)
 
 	bot.Handle("/new", handlers.New)
 
