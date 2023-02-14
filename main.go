@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -11,10 +14,13 @@ import (
 	"github.com/w1lldone/go-khotmil-bot/internal/handlers"
 	"github.com/w1lldone/go-khotmil-bot/internal/middlewares"
 	"github.com/w1lldone/go-khotmil-bot/internal/models"
+	"github.com/w1lldone/go-khotmil-bot/internal/worker"
 	"gopkg.in/telebot.v3"
 )
 
 func main() {
+	var wg sync.WaitGroup
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal(err)
@@ -37,8 +43,24 @@ func main() {
 	models.Init()
 	models.Migrate()
 
-	fmt.Println("listening telegram events")
-	bot.Start()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		worker.InitWorker()
+	}()
+
+	wg.Add(1)
+	fmt.Println("Listening telegram events.")
+	go bot.Start()
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGINT)
+	<-signalChan
+	fmt.Println("Stopping telegram bot")
+	bot.Stop()
+	wg.Done()
+
+	wg.Wait()
 }
 
 func registerRoutes(bot *telebot.Bot) {

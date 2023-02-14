@@ -3,11 +3,15 @@ module github.com/w1lldone/go-khotmil-bot
 go 1.19
 
 require (
+	github.com/gocraft/work v0.5.1
+	github.com/gomodule/redigo v1.8.9
 	github.com/joho/godotenv v1.4.0
 	gopkg.in/telebot.v3 v3.1.2
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/gorm v1.24.3
 )
+
+require github.com/robfig/cron v1.2.0 // indirect
 
 require (
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
