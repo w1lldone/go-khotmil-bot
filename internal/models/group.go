@@ -113,3 +113,7 @@ func (g *Group) ResetMemberOrder() error {
 
 	return nil
 }
+
+func (g Group) JobUniqueKey() map[string]interface{} {
+	return map[string]interface{}{"group_id": g.ID}
+}

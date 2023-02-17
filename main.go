@@ -46,7 +46,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		worker.InitWorker()
+		worker.InitWorker(bot)
 	}()
 
 	wg.Add(1)

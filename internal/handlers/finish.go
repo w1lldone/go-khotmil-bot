@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/w1lldone/go-khotmil-bot/internal/models"
+	"github.com/w1lldone/go-khotmil-bot/internal/worker"
 	"gopkg.in/telebot.v3"
 )
 
@@ -55,6 +56,7 @@ func Finish(c telebot.Context) error {
 
 		group.SetSchedule(time.Now().Add(time.Hour * 24))
 		group.AssignMembersSchedules()
+		worker.EnqueueReminder(*group, group.Deadline.Time)
 	}
 
 	return Progress(c)
